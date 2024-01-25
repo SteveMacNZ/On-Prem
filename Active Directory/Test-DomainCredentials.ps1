@@ -34,75 +34,75 @@
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 function Test-Cred {
            
-    [CmdletBinding()]
-    [OutputType([String])] 
-       
-    Param ( 
-        [Parameter( 
-            Mandatory = $false, 
-            ValueFromPipeLine = $true, 
-            ValueFromPipelineByPropertyName = $true
-        )] 
-        [Alias( 
-            'PSCredential'
-        )] 
-        [ValidateNotNull()] 
-        [System.Management.Automation.PSCredential]
-        [System.Management.Automation.Credential()] 
-        $Credentials
-    )
-    $Domain = $null
-    $Root = $null
-    $Username = $null
-    $Password = $null
+  [CmdletBinding()]
+  [OutputType([String])] 
       
-    If($Credentials -eq $null)
-    {
-        Try
-        {
-            $Credentials = Get-Credential "$env:USERDNSDOMAIN\$env:username" -ErrorAction Stop
-        }
-        Catch
-        {
-            $ErrorMsg = $_.Exception.Message
-            Write-Warning "Failed to validate credentials: $ErrorMsg "
-            Pause
-            Break
-        }
-    }
-      
-    # Checking module
+  Param ( 
+    [Parameter( 
+      Mandatory = $false, 
+      ValueFromPipeLine = $true, 
+      ValueFromPipelineByPropertyName = $true
+    )] 
+    [Alias( 
+        'PSCredential'
+    )] 
+    [ValidateNotNull()] 
+    [System.Management.Automation.PSCredential]
+    [System.Management.Automation.Credential()] 
+    $Credentials
+  )
+  $Domain = $null
+  $Root = $null
+  $Username = $null
+  $Password = $null
+    
+  If($Credentials -eq $null)
+  {
     Try
     {
-        # Split username and password
-        $Username = $credentials.username
-        $Password = $credentials.GetNetworkCredential().password
-  
-        # Get Domain
-        $Root = "LDAP://" + ([ADSI]'').distinguishedName
-        $Domain = New-Object System.DirectoryServices.DirectoryEntry($Root,$UserName,$Password)
+      $Credentials = Get-Credential "$env:USERDNSDOMAIN\$env:username" -ErrorAction Stop
     }
     Catch
     {
-        $_.Exception.Message
-        Continue
+      $ErrorMsg = $_.Exception.Message
+      Write-Warning "Failed to validate credentials: $ErrorMsg "
+      Pause
+      Break
     }
-  
-    If(!$domain)
+  }
+      
+  # Checking module
+  Try
+  {
+    # Split username and password
+    $Username = $credentials.username
+    $Password = $credentials.GetNetworkCredential().password
+
+    # Get Domain
+    $Root = "LDAP://" + ([ADSI]'').distinguishedName
+    $Domain = New-Object System.DirectoryServices.DirectoryEntry($Root,$UserName,$Password)
+  }
+  Catch
+  {
+    $_.Exception.Message
+    Continue
+  }
+
+  If(!$domain)
+  {
+    Write-Warning "Something went wrong"
+  }
+  Else
+  {
+    If ($null -ne $domain.name)
     {
-        Write-Warning "Something went wrong"
+      return "Authenticated"
     }
     Else
     {
-        If ($null -ne $domain.name)
-        {
-            return "Authenticated"
-        }
-        Else
-        {
-            return "Not authenticated"
-        }
+      return "Not authenticated"
     }
+  }
 }
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
